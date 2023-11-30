@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
+using AutoMapper.Internal;
 using rpg_Class_Project.Dtos.Character;
 using rpg_Class_Project.Models;
 
@@ -41,8 +42,20 @@ namespace rpg_Class_Project.Services.CharacterService
         public async Task<ServiceResponse<List<GetCharacterResponseDTO>>> GetAllCharacters()
         {
             ServiceResponse<List<GetCharacterResponseDTO>> serviceResponse = new ServiceResponse<List<GetCharacterResponseDTO>>();
-            serviceResponse.Data = exampleCharacters.Select(c => _mapper.Map<GetCharacterResponseDTO>(c)).ToList();
-            serviceResponse.Success = true;
+
+            if(exampleCharacters.Count() <= 0 || exampleCharacters == null)
+            {
+                serviceResponse.Data = null;
+                serviceResponse.Success = false;
+                serviceResponse.Message = "List of characters was empty or null";
+            }
+            else
+            {
+                serviceResponse.Data = exampleCharacters.Select(c => _mapper.Map<GetCharacterResponseDTO>(c)).ToList();
+                serviceResponse.Success = true;
+                serviceResponse.Message = "Returned list of all characters";
+            }
+
             return serviceResponse;
         }
 
@@ -60,6 +73,56 @@ namespace rpg_Class_Project.Services.CharacterService
             else
             {
                 serviceResponse.Success = true;
+                serviceResponse.Message = $"Character with the id of '{id}' was found.";
+            }
+
+            return serviceResponse;
+        }
+
+        public async Task<ServiceResponse<GetCharacterResponseDTO>> UpdateCharacter(UpdateCharacterDTO updateCharacter)
+        {
+            ServiceResponse<GetCharacterResponseDTO> serviceResponse = new ServiceResponse<GetCharacterResponseDTO>();
+            Character? character = exampleCharacters.FirstOrDefault(c => c.Id == updateCharacter.Id);
+
+            if(character != null)
+            {
+                character.Name = updateCharacter.Name;
+                character.HitPoints = updateCharacter.HitPoints;
+                character.Strength = updateCharacter.Strength;
+                character.Defense = updateCharacter.Defense;
+                character.Intellegence = updateCharacter.Intellegence;
+                character.Class = updateCharacter.Class;
+
+                serviceResponse.Data = _mapper.Map<GetCharacterResponseDTO>(character);
+                serviceResponse.Success = true;
+                serviceResponse.Message = $"The character with id of {updateCharacter.Id} has been updated!";
+            }
+            else
+            {
+                serviceResponse.Success = false;
+                serviceResponse.Message = $"Character with the id of {updateCharacter.Id} could not be found.";
+            }
+
+            return serviceResponse;
+        }
+
+        public async Task<ServiceResponse<GetCharacterResponseDTO>> DeleteCharacter(string id)
+        {
+            ServiceResponse<GetCharacterResponseDTO> serviceResponse = new ServiceResponse<GetCharacterResponseDTO>();
+            Character? character = exampleCharacters.FirstOrDefault(c => c.Id == id);
+
+            if(character != null)
+            {
+                exampleCharacters.Remove(character);
+
+                serviceResponse.Data = _mapper.Map<GetCharacterResponseDTO>(character);
+                serviceResponse.Success = true;
+                serviceResponse.Message = $"The character with id of {id} has been deleted!";
+            }
+            else
+            {
+                serviceResponse.Success = false;
+                serviceResponse.Message = $"Character with the id of {id} could not be found.";
             }
 
             return serviceResponse;

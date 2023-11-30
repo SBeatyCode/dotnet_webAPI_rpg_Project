@@ -19,25 +19,56 @@ namespace rpg_Class_Project.Controllers
         public CharacterController(ICharacterService characterService)
         {
             _characterService = characterService;
-            //
         }
 
         [HttpGet("GetAllCharacters")]
         public async Task<ActionResult<ServiceResponse<List<GetCharacterResponseDTO>>>> GetAllCharacters()
         {
-            return Ok(await _characterService.GetAllCharacters());
+            var response = await _characterService.GetAllCharacters();
+            
+            if(response.Data == null)
+                return NotFound(response);
+            else
+                return Ok(response);
         }
 
         [HttpGet("GetCharacter/{id}")]
         public async Task<ActionResult<ServiceResponse<GetCharacterResponseDTO>>> GetCharacter(string id)
         {
-            return Ok(await _characterService.GetCharacterById(id));
+            var response = await _characterService.GetCharacterById(id);
+
+            if(response.Data == null)
+                return NotFound(response);
+            else
+                return Ok(response);
         }
 
         [HttpPost("AddCharacter")]
         public async Task<ActionResult<ServiceResponse<List<GetCharacterResponseDTO>>>> AddCharacter(AddCharacterResponseDTO character)
         {
             return Ok(await _characterService.AddCharacter(character));
+        }
+
+        [HttpPut("UpdateCharacter")]
+        public async Task<ActionResult<ServiceResponse<GetCharacterResponseDTO>>> UpdateCharacter(UpdateCharacterDTO updateCharacter)
+        {
+            var response = await _characterService.UpdateCharacter(updateCharacter);
+
+            if(response.Data == null)
+                return NotFound(response);
+            else
+                return Ok(response);
+        }
+
+        [HttpDelete("DeleteCharacter/{id}")]
+        public async Task<ActionResult<ServiceResponse<GetCharacterResponseDTO>>> DeleteCharacter(string id)
+        {
+            var response = await _characterService.DeleteCharacter(id);
+
+            if(response.Data == null)
+                return NotFound(response);
+            else
+                return Ok(response);
         }
     }
 }
