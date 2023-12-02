@@ -7,7 +7,7 @@ namespace rpg_Class_Project.Models
 {
     public class Character
     {
-        public string Id {get; set;} = "0";
+        public int Id {get; set;} = 0;
         public string Name {get; set;} = "Link";
         public int HitPoints {get; set;} = 10;
         public int Strength {get; set;} = 10;

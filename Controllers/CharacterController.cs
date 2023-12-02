@@ -33,7 +33,7 @@ namespace rpg_Class_Project.Controllers
         }
 
         [HttpGet("GetCharacter/{id}")]
-        public async Task<ActionResult<ServiceResponse<GetCharacterResponseDTO>>> GetCharacter(string id)
+        public async Task<ActionResult<ServiceResponse<GetCharacterResponseDTO>>> GetCharacter(int id)
         {
             var response = await _characterService.GetCharacterById(id);
 
@@ -61,7 +61,7 @@ namespace rpg_Class_Project.Controllers
         }
 
         [HttpDelete("DeleteCharacter/{id}")]
-        public async Task<ActionResult<ServiceResponse<GetCharacterResponseDTO>>> DeleteCharacter(string id)
+        public async Task<ActionResult<ServiceResponse<GetCharacterResponseDTO>>> DeleteCharacter(int id)
         {
             var response = await _characterService.DeleteCharacter(id);
 
