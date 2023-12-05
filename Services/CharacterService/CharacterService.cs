@@ -22,16 +22,17 @@ namespace rpg_Class_Project.Services.CharacterService
             _context = context;
         }
 
-        public async Task<ServiceResponse<List<GetCharacterResponseDTO>>> AddCharacter(AddCharacterResponseDTO character)
+        public async Task<ServiceResponse<List<GetCharacterResponseDTO>>> AddCharacter(AddCharacterResponseDTO newCharacter)
         {
             ServiceResponse<List<GetCharacterResponseDTO>> serviceResponse = new ServiceResponse<List<GetCharacterResponseDTO>>();
-            Character newCharacter = _mapper.Map<Character>(character);
+            Character character = _mapper.Map<Character>(newCharacter);
 
-            _context.Characters.Add(newCharacter);
+            _context.Characters.Add(character);
             await _context.SaveChangesAsync();
 
             serviceResponse.Data = await _context.Characters.Select(c => _mapper.Map<GetCharacterResponseDTO>(c)).ToListAsync();
             serviceResponse.Success = true;
+            serviceResponse.Message = $"Sucessfully added new character, '{character.Name}'!";
 
             return serviceResponse;
         }
@@ -80,7 +81,7 @@ namespace rpg_Class_Project.Services.CharacterService
         public async Task<ServiceResponse<GetCharacterResponseDTO>> UpdateCharacter(UpdateCharacterDTO updateCharacter)
         {
             ServiceResponse<GetCharacterResponseDTO> serviceResponse = new ServiceResponse<GetCharacterResponseDTO>();
-            Character? character = await _context.Characters.FirstOrDefaultAsync(c => c.Id == updateCharacter.Id);
+            var character = await _context.Characters.FirstOrDefaultAsync(c => c.Id == updateCharacter.Id);
 
             if(character != null)
             {
@@ -109,13 +110,14 @@ namespace rpg_Class_Project.Services.CharacterService
         public async Task<ServiceResponse<GetCharacterResponseDTO>> DeleteCharacter(int id)
         {
             ServiceResponse<GetCharacterResponseDTO> serviceResponse = new ServiceResponse<GetCharacterResponseDTO>();
-            Character? character = await _context.Characters.FirstOrDefaultAsync(c => c.Id == id);
+            var character = await _context.Characters.FirstOrDefaultAsync(c => c.Id == id);
 
             if(character != null)
             {
-                _context.Characters.Remove(character);
-
                 serviceResponse.Data = _mapper.Map<GetCharacterResponseDTO>(character);
+
+                _context.Characters.Remove(character);
+                await _context.SaveChangesAsync();
 
                 serviceResponse.Success = true;
                 serviceResponse.Message = $"The character with id of {id} has been deleted!";

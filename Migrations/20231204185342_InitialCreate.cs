@@ -14,7 +14,8 @@ namespace rpg_Class_Project.Migrations
                 name: "Characters",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     HitPoints = table.Column<int>(type: "int", nullable: false),
                     Strength = table.Column<int>(type: "int", nullable: false),

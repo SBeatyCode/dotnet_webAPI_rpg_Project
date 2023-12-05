@@ -11,8 +11,8 @@ using rpg_Class_Project.Data;
 namespace rpg_Class_Project.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20231202005453_CreateCharacters")]
-    partial class CreateCharacters
+    [Migration("20231204185342_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
