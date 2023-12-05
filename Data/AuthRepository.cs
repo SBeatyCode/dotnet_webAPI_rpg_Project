@@ -1,8 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using System.Security.Claims;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Identity.Client;
+using Microsoft.IdentityModel.Tokens;
 using rpg_Class_Project.Models;
 
 namespace rpg_Class_Project.Data
@@ -11,10 +16,12 @@ namespace rpg_Class_Project.Data
     {
 
         private readonly DataContext _context;
+        private readonly IConfiguration _configuration;
 
-        public AuthRepository(DataContext context)
+        public AuthRepository(DataContext context, IConfiguration configuration)
         {
             _context = context;
+            _configuration = configuration;
         }
 
         public async Task<ServiceResponse<int>> Register(User user, string password)
@@ -73,7 +80,7 @@ namespace rpg_Class_Project.Data
                 }
                 else
                 {
-                    response.Data = user.Id.ToString();
+                    response.Data = CreateToken(user);
                     response.Success = true;
                     response.Message = $"User was found, logging in now.";
                 }
@@ -111,6 +118,36 @@ namespace rpg_Class_Project.Data
             var computedHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
 
             return computedHash.SequenceEqual(passwordHash);
+        }
+
+        private string CreateToken(User user)
+        {
+            var claims = new List<Claim> 
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.Name, user.Username)
+            };
+
+            var appSettingsToken = _configuration.GetSection("AppSettings:Token").Value;
+
+            if(appSettingsToken == null)
+                throw new Exception("Appsettings Token is null!");
+
+            SymmetricSecurityKey key = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(appSettingsToken));
+
+            SigningCredentials credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
+
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(claims),
+                Expires = DateTime.Now.AddDays(1),
+                SigningCredentials = credentials
+            };
+
+            JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();
+            SecurityToken token = tokenHandler.CreateToken(tokenDescriptor);
+
+            return tokenHandler.WriteToken(token);
         }
     }
 }
