@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authorization.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
 using rpg_Class_Project.Dtos.Character;
@@ -10,6 +12,7 @@ using rpg_Class_Project.Services.CharacterService;
 
 namespace rpg_Class_Project.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class CharacterController : ControllerBase
@@ -24,10 +27,13 @@ namespace rpg_Class_Project.Controllers
         [HttpGet("GetAllCharacters")]
         public async Task<ActionResult<ServiceResponse<List<GetCharacterResponseDTO>>>> GetAllCharacters()
         {
-            var response = await _characterService.GetAllCharacters();
+            int userId = int.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)!.Value);
+            var response = await _characterService.GetAllCharacters(userId);
             
             if(response.Data == null)
+            {
                 return NotFound(response);
+            }
             else
                 return Ok(response);
         }

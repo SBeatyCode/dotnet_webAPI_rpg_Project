@@ -37,10 +37,10 @@ namespace rpg_Class_Project.Services.CharacterService
             return serviceResponse;
         }
 
-        public async Task<ServiceResponse<List<GetCharacterResponseDTO>>> GetAllCharacters()
+        public async Task<ServiceResponse<List<GetCharacterResponseDTO>>> GetAllCharacters(int userId)
         {
             ServiceResponse<List<GetCharacterResponseDTO>> serviceResponse = new ServiceResponse<List<GetCharacterResponseDTO>>();
-            var dbCharacters = await _context.Characters.ToListAsync();
+            var dbCharacters = await _context.Characters.Where(c => c.User.Id == userId).ToListAsync();
 
             if(dbCharacters.Count() <= 0 || dbCharacters == null)
             {

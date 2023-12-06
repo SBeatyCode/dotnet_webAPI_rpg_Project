@@ -9,7 +9,7 @@ namespace rpg_Class_Project.Services.CharacterService
 {
     public interface ICharacterService
     {
-        Task<ServiceResponse<List<GetCharacterResponseDTO>>> GetAllCharacters();
+        Task<ServiceResponse<List<GetCharacterResponseDTO>>> GetAllCharacters(int userId);
         Task<ServiceResponse<GetCharacterResponseDTO>> GetCharacterById(int id);
         Task<ServiceResponse<List<GetCharacterResponseDTO>>> AddCharacter(AddCharacterResponseDTO character);
         Task<ServiceResponse<GetCharacterResponseDTO>> UpdateCharacter(UpdateCharacterDTO updateCharacter);
