@@ -15,5 +15,6 @@ namespace rpg_Class_Project.Models
         public int Intellegence {get; set;} = 10;
         public RpgClass Class {get; set;} = RpgClass.Novice;
         public User? User {get; set;}
+        public Weapon? Weapon {get; set;}
     }
 }

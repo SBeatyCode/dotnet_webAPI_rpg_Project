@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using AutoMapper;
 using AutoMapper.Internal;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using rpg_Class_Project.Data;
 using rpg_Class_Project.Dtos.Character;
@@ -15,32 +17,38 @@ namespace rpg_Class_Project.Services.CharacterService
     {
         private readonly IMapper _mapper;
         private readonly DataContext _context;
+        private readonly IHttpContextAccessor _httpContextAccesor;
 
-        public CharacterService(IMapper mapper, DataContext context)
+        public CharacterService(IMapper mapper, DataContext context, IHttpContextAccessor contextAccesor)
         {
             _mapper = mapper;
             _context = context;
+            _httpContextAccesor = contextAccesor;
         }
 
         public async Task<ServiceResponse<List<GetCharacterResponseDTO>>> AddCharacter(AddCharacterResponseDTO newCharacter)
         {
             ServiceResponse<List<GetCharacterResponseDTO>> serviceResponse = new ServiceResponse<List<GetCharacterResponseDTO>>();
             Character character = _mapper.Map<Character>(newCharacter);
+            character.User = await _context.Users.FirstOrDefaultAsync(u => u.Id == GetUserID());
 
             _context.Characters.Add(character);
             await _context.SaveChangesAsync();
 
-            serviceResponse.Data = await _context.Characters.Select(c => _mapper.Map<GetCharacterResponseDTO>(c)).ToListAsync();
+            serviceResponse.Data = await _context.Characters
+                .Where(c => c.User!.Id == GetUserID())
+                .Select(c => _mapper.Map<GetCharacterResponseDTO>(c))
+                .ToListAsync();
             serviceResponse.Success = true;
             serviceResponse.Message = $"Sucessfully added new character, '{character.Name}'!";
 
             return serviceResponse;
         }
 
-        public async Task<ServiceResponse<List<GetCharacterResponseDTO>>> GetAllCharacters(int userId)
+        public async Task<ServiceResponse<List<GetCharacterResponseDTO>>> GetAllCharacters()
         {
             ServiceResponse<List<GetCharacterResponseDTO>> serviceResponse = new ServiceResponse<List<GetCharacterResponseDTO>>();
-            var dbCharacters = await _context.Characters.Where(c => c.User.Id == userId).ToListAsync();
+            var dbCharacters = await _context.Characters.Where(c => c.User.Id == GetUserID()).ToListAsync();
 
             if(dbCharacters.Count() <= 0 || dbCharacters == null)
             {
@@ -61,7 +69,7 @@ namespace rpg_Class_Project.Services.CharacterService
         public async Task<ServiceResponse<GetCharacterResponseDTO>> GetCharacterById(int id)
         {
             ServiceResponse<GetCharacterResponseDTO> serviceResponse = new ServiceResponse<GetCharacterResponseDTO>();
-            var foundCharacter = await _context.Characters.FirstOrDefaultAsync(c => c.Id == id);
+            var foundCharacter = await _context.Characters.FirstOrDefaultAsync(c => c.Id == id && c.User!.Id == GetUserID());
             serviceResponse.Data = _mapper.Map<GetCharacterResponseDTO>(foundCharacter);
 
             if(foundCharacter == null)
@@ -81,7 +89,7 @@ namespace rpg_Class_Project.Services.CharacterService
         public async Task<ServiceResponse<GetCharacterResponseDTO>> UpdateCharacter(UpdateCharacterDTO updateCharacter)
         {
             ServiceResponse<GetCharacterResponseDTO> serviceResponse = new ServiceResponse<GetCharacterResponseDTO>();
-            var character = await _context.Characters.FirstOrDefaultAsync(c => c.Id == updateCharacter.Id);
+            var character = await _context.Characters.FirstOrDefaultAsync(c => c.Id == updateCharacter.Id && c.User!.Id == GetUserID());
 
             if(character != null)
             {
@@ -110,7 +118,7 @@ namespace rpg_Class_Project.Services.CharacterService
         public async Task<ServiceResponse<GetCharacterResponseDTO>> DeleteCharacter(int id)
         {
             ServiceResponse<GetCharacterResponseDTO> serviceResponse = new ServiceResponse<GetCharacterResponseDTO>();
-            var character = await _context.Characters.FirstOrDefaultAsync(c => c.Id == id);
+            var character = await _context.Characters.FirstOrDefaultAsync(c => c.Id == id && c.User!.Id == GetUserID());
 
             if(character != null)
             {
@@ -130,5 +138,10 @@ namespace rpg_Class_Project.Services.CharacterService
 
             return serviceResponse;
         }
+
+        /// <summary>
+        /// Gets the UserID of the currently signed-in and authenticated User from HTTPContextAccesor as an int
+        /// </summary>
+        private int GetUserID() => int.Parse(_httpContextAccesor.HttpContext!.User.FindFirstValue(ClaimTypes.NameIdentifier)!);
     }
 }

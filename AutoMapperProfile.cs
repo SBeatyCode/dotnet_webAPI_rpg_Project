@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
 using rpg_Class_Project.Dtos.Character;
+using rpg_Class_Project.Dtos.Character.Weapon;
 using rpg_Class_Project.Models;
 
 namespace rpg_Class_Project
@@ -14,6 +15,7 @@ namespace rpg_Class_Project
         {
             CreateMap<Character, GetCharacterResponseDTO>();
             CreateMap<AddCharacterResponseDTO, Character>();
+            CreateMap<Weapon, GetWeaponResponseDto>();
         }
     }
 }

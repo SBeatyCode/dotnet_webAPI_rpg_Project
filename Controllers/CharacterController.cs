@@ -27,13 +27,10 @@ namespace rpg_Class_Project.Controllers
         [HttpGet("GetAllCharacters")]
         public async Task<ActionResult<ServiceResponse<List<GetCharacterResponseDTO>>>> GetAllCharacters()
         {
-            int userId = int.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)!.Value);
-            var response = await _characterService.GetAllCharacters(userId);
+            var response = await _characterService.GetAllCharacters();
             
             if(response.Data == null)
-            {
                 return NotFound(response);
-            }
             else
                 return Ok(response);
         }
