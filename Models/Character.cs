@@ -16,5 +16,6 @@ namespace rpg_Class_Project.Models
         public RpgClass Class {get; set;} = RpgClass.Novice;
         public User? User {get; set;}
         public Weapon? Weapon {get; set;}
+        public List<Skill>? Skills {get; set;}
     }
 }

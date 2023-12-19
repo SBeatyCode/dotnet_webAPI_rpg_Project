@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using rpg_Class_Project.Dtos.Character.Weapon;
+using rpg_Class_Project.Dtos.Skill;
 using rpg_Class_Project.Models;
 
 namespace rpg_Class_Project.Dtos.Character
@@ -17,5 +18,6 @@ namespace rpg_Class_Project.Dtos.Character
         public int Intellegence {get; set;} = 10;
         public RpgClass Class {get; set;} = RpgClass.Novice;
         public GetWeaponResponseDto? Weapon {get; set;}
+        public List<GetSkillResponseDto>? Skills {get; set;}
     }
 }
