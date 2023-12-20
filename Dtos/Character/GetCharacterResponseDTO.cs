@@ -19,5 +19,8 @@ namespace rpg_Class_Project.Dtos.Character
         public RpgClass Class {get; set;} = RpgClass.Novice;
         public GetWeaponResponseDto? Weapon {get; set;}
         public List<GetSkillResponseDto>? Skills {get; set;}
+        public int Fights {get; set;}
+        public int Victories {get; set;}
+        public int Defeats {get; set;}
     }
 }
