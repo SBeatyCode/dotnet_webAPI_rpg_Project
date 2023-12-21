@@ -14,5 +14,6 @@ namespace rpg_Class_Project.Services.FightService
         Task<ServiceResponse<AttackResultDto>> SkillAttack(SkillAttackDto skillAttackDto);
 
         Task<ServiceResponse<FightResultDto>> Fight(FightRequestDto fightRequestDto);
+        Task<ServiceResponse<List<HighscoreDto>>> GetHighScore();
     }
 }

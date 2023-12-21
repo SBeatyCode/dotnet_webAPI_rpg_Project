@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using rpg_Class_Project.Data;
 using rpg_Class_Project.Dtos.Fight;
@@ -12,10 +13,12 @@ namespace rpg_Class_Project.Services.FightService
     public class FightService : IFightService
     {
         private readonly DataContext _context;
+        private readonly IMapper _mapper;
 
-        public FightService(DataContext context)
+        public FightService(DataContext context, IMapper mapper)
         {
             _context = context;
+            _mapper = mapper;
         }
 
         public async Task<ServiceResponse<AttackResultDto>> WeaponAttack(WeaponAttackDto weaponAttackDto)
@@ -173,7 +176,10 @@ namespace rpg_Class_Project.Services.FightService
 
         public async Task<ServiceResponse<FightResultDto>> Fight(FightRequestDto fightRequestDto)
         {
-            var result = new ServiceResponse<FightResultDto>();
+            var result = new ServiceResponse<FightResultDto>()
+            {
+                Data = new FightResultDto()
+            };
 
             try
             {
@@ -191,37 +197,82 @@ namespace rpg_Class_Project.Services.FightService
                 }
                 else
                 {
-                    bool characterDefeated = false;
-                    while(!characterDefeated)
+                    bool stopFight = false;
+                    while(!stopFight)
                     {
                         foreach(var attacker in characters)
                         {
-                            var opponents = characters.Where(c => c.Id != attacker.Id).ToList();
+                            if(attacker.HitPoints <= 0)
+                                continue;
+
+                            var opponents = characters.Where(c => c.Id != attacker.Id && c.HitPoints > 0).ToList();
 
                             int damage = 0;
-                            string attackUsed = string.Empty;
                             bool useSkill = false;
 
-                            if(attacker.Skills != null)
+                            if(attacker.Skills != null && attacker.Skills.Count > 0)
                             {
-                                if(new Random().Next(2) > 0)
                                     useSkill = true;
                             }
 
                             if(useSkill)
                             {
-                                //
+                                int skillID = new Random().Next(attacker.Skills!.Count);
+                                damage += attacker.Skills[skillID].Damage;
+                                damage += attacker.Intellegence;
+
+                                result.Data!.Log.Add($"{attacker.Name} attacks with their {attacker.Skills[skillID].Name} skill!");
                             }
                             else
                             {
                                 damage = attacker.Strength;
                                 if(attacker.Weapon != null)
+                                {
                                     damage+= attacker.Weapon.Damage;
-
-                                //damage-=
+                                    result.Data!.Log.Add($"{attacker.Name} attacks with their weapon, {attacker.Weapon.Name}!");
+                                }
+                                else
+                                {
+                                    result.Data!.Log.Add($"{attacker.Name} attacks unarmed!");
+                                }
                             }
+                            
+                            foreach(var opponent in opponents)
+                            {
+                                attacker.Fights++;
+                                opponent.Fights++;
+
+                                opponent.HitPoints = (damage - opponent.Defense);
+
+                                result.Data.Log.Add($"{attacker.Name} attacks {opponent.Name} for {damage} damage!");
+
+                                if(opponent.HitPoints <= 0)
+                                {
+                                    opponent.HitPoints = 0;
+                                    opponent.Defeats++;
+                                    attacker.Victories++;
+                                    stopFight = true;
+                                    result.Data.Log.Add($"{opponent.Name} has been defeated!");
+                                    result.Data.Log.Add($"The Fight has finished!");
+                                    break;
+                                }
+                            }
+                            if(stopFight)
+                                break;
+
+                            stopFight = true;
                         }
                     }
+                    result.Success = true;
+                    result.Message = "The fight has been conducted!";
+
+
+                    foreach(Character character in characters)
+                    {
+                        character.HitPoints = 100;
+                    }
+
+                    await _context.SaveChangesAsync();
                 }
             }
             catch(Exception ex)
@@ -229,6 +280,35 @@ namespace rpg_Class_Project.Services.FightService
                 result.Data = null;
                 result.Success = false;
                 result.Message = $"An Exception occured: " + ex.Message;
+            }
+
+            return result;
+        }
+
+        public async Task<ServiceResponse<List<HighscoreDto>>> GetHighScore()
+        {
+            var result = new ServiceResponse<List<HighscoreDto>>();
+
+            var characters = await _context.Characters
+                .Where(c => c.Fights > 0)
+                .OrderByDescending(c => c.Victories)
+                .ThenBy(c => c.Defeats)
+                .ToListAsync();
+
+            if(characters == null)
+            {
+                result.Data = null;
+                result.Success = false;
+                result.Message = $"Could not retrieve characters, OR no fight data available currently.";
+            }
+            else
+            {
+                result = new ServiceResponse<List<HighscoreDto>>()
+                {
+                    Data = characters.Select(c => _mapper.Map<HighscoreDto>(c)).ToList()
+                };
+                result.Success = true;
+                result.Message = "Fight results have been generated";
             }
 
             return result;

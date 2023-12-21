@@ -52,5 +52,16 @@ namespace rpg_Class_Project.Controllers
             else
                 return Ok(result);
         }
+
+        [HttpGet("Highscore")]
+        public async Task<ActionResult<ServiceResponse<List<HighscoreDto>>>> GetHighScore()
+        {
+            var result = await _fightService.GetHighScore();
+
+            if(result.Data == null)
+                return NotFound(result);
+            else
+                return Ok(result);
+        }
     }
 }
